@@ -8,7 +8,7 @@ var mongo = require('mongodb');
 var app = express();
 require('dotenv').config();
 
-mongo.connect('mongodb://localhost:27017/clementinejs', function (err, db) {
+mongo.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clementinejs', function (err, db) {
 
     if (err) {
         throw new Error('Database failed to connect!');
