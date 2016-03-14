@@ -24,6 +24,8 @@
   "author": "Blake Johnston",
   "license": "MIT",
   "dependencies": {
+    "bing-search": "0.0.1",
+    "bing.search": "^1.0.1",
     "dotenv": "^2.0.0",
     "express": "^4.12.4",
     "mongodb": "*"

@@ -1,61 +1,61 @@
 'use strict'
 
 var sourceUrl = "https://sleepy-fortress-70363.herokuapp.com/";
+var Search = require('bing.search');
+var util = require('util')
 
 function urlHandler(db){
-	var urls = db.collection('urls');
-	
-    this.storeUrl = function(req,res){
-    	console.log('store Url')
-	   	console.log(req.params)
-	   	console.log(req.query)
-		var url = req.params.q + req.params['0'];
-		if(!validateURL(url)){
-			res.send('not a valid url');
-			return;
-		}
-	 	urls.count(function(err,count){
-	 		if(err)
-	 			throw err;
-			urls.insert({
-	   		'url':req.params.q + req.params['0'],
-	   		'counter': count,
-	   		'shorturl': sourceUrl + count
+	var queries = db.collection('queries');
+	var search = new Search(process.env.BING_KEY);
+    
+    this.getQuery = function(req,res){
+    	var query = req.params.q
+    	if (query == 'favicon.ico') 
+    		return;
+
+    	var size = req.query.offset;
+    	queries.insert({
+	   		'term': query,
+	   		'when': new Date().toLocaleString()
 	   		},
 	   		function(err,result){
 				if(err)
 					throw err;
-				var r = {
-					url: result['ops'][0]['url'],
-					shorturl: result['ops'][0]['shorturl']
-					};
-	         res.json(r);
+				search.images(query,
+				  {top: 5+size},
+				  function(err, results) {
+				  	if(err) throw err;
+				  	var result = [];
+				  	for(var i = 0;i<results.length;i++){
+				  		var r = {
+					  		imageUrl: results[i].url,
+					  		altText: results[i].title,
+					  		sourceUrl: results[i].sourceUrl
+					  	};
+					  	result.push(r);
+				  	}
+				    res.send(result);
+				  }
+				);
 			});
-		});
     };
-   
-   this.getUrl = function(req,res){
-   	console.log(req.params)
-   		if(req.params.q =='favicon.ico')
-   			return
-   		console.log('get Url')
-   		console.log(req.params)
-		console.log(req.query)
-
-   		urls.findOne({counter: parseInt(req.params.q,10)},function(err,result){
-   		if(err)
-				throw err;
-		console.log(result['url'])
-		res.redirect(result['url']);
-   		});
-    };
-   
-   var validateURL = function(url) {
-    // Checks to see if it is an actual url
-    // Regex from https://gist.github.com/dperini/729294
-    var regex = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,}))\.?)(?::\d{2,5})?(?:[/?#]\S*)?$/i;
-    return regex.test(url);
-  };
+    
+    this.getLatest= function(req,res){
+		var cursor = queries.find({},null,{"limit":10, "sort": {"when": -1}});
+		var result = []
+		cursor.each(function(err, doc) {
+        if(err)
+            throw err;
+        if (doc === null) {
+            // doc is null when the last document has been processed
+            res.send(result);
+            return;
+        }
+        // do something with each doc, like push Email into a results array
+        result.push({term: doc.term, when:doc.when});
+    });
+	}
+   		
 }
 
 module.exports = urlHandler;
