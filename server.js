@@ -3,11 +3,11 @@ var express = require('express');
 var routes = require('./app/routes/index.js');
 var mongo = require('mongodb');
 
-
-var app = express();
 require('dotenv').config();
+var app = express();
 
-mongo.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clementinejs', function (err, db) {
+
+mongo.MongoClient.connect(process.env.MONGO_URI || 'mongodb://user:password@ds011409.mlab.com:11409/atactionparkshortener', function (err, db) {
 
     if (err) {
         throw new Error('Database failed to connect!');
@@ -20,6 +20,12 @@ mongo.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clementinejs',
     app.use('/controllers', express.static(process.cwd() + '/app/controllers'));
 
     routes(app, db);
+    
+    db.createCollection("urls", {
+    capped: true,
+    size: 5242880,
+    max: 5000
+  });
 
     var port = process.env.PORT || 8080;
 	app.listen(port,  function () {
