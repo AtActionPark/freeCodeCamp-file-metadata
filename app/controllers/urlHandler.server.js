@@ -1,6 +1,6 @@
 'use strict'
 
-var sourceUrl = "https://sheltered-basin-29961.herokuapp.com/";
+var sourceUrl = "https://sleepy-fortress-70363.herokuapp.com/";
 
 function urlHandler(db){
 	var urls = db.collection('urls');
