@@ -6,7 +6,7 @@ var mongo = require('mongodb');
 require('dotenv').config();
 var app = express();
 
-mongo.MongoClient.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/clementinejs', function (err, db) {
+mongo.MongoClient.connect(process.env.MONGOLAB_URI || 'mongodb://localhost:27017/clementinejs', function (err, db) {
 
     if (err) {
         throw new Error('Database failed to connect!');
